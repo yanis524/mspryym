@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import requests
 from sqlalchemy import func
 import uuid
+import time
 
 def create_app():
     app = Flask(__name__)
@@ -43,6 +44,13 @@ def create_app():
     return app
 
 app = create_app()
+
+# Ajouter le filtre format_datetime
+@app.template_filter('format_datetime')
+def format_datetime(value):
+    if value is None:
+        return ""
+    return value.strftime('%Y-%m-%d %H:%M:%S')
 
 def get_harvester_from_request():
     """Récupère la sonde à partir de l'API key"""
@@ -172,27 +180,19 @@ def add_harvester():
         app.logger.error(f"Erreur lors de l'ajout d'une sonde: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/ping', methods=['POST', 'GET'])
+@app.route('/api/ping', methods=['POST'])
 def ping():
     """Endpoint pour mettre à jour le statut d'une sonde"""
-    app.logger.info(f"Headers reçus : {dict(request.headers)}")
-    
     harvester = get_harvester_from_request()
     if not harvester:
-        app.logger.error(f"Sonde non autorisée. API Key: {request.headers.get('X-API-Key')}")
-        return jsonify({'error': 'Sonde non autorisée'}), 401
-    
-    # Mise à jour du statut et de l'IP
-    harvester.last_seen = datetime.utcnow()
-    harvester.ip_address = request.remote_addr
-    harvester.update_status()
-    
+        return jsonify({'error': 'Invalid API key'}), 401
+        
     try:
+        harvester.status = 'connected'
+        harvester.last_seen = datetime.utcnow()
         db.session.commit()
-        app.logger.info(f"Ping réussi pour la sonde {harvester.name}")
-        return jsonify({'status': 'ok'})
+        return jsonify({'status': 'success'})
     except Exception as e:
-        db.session.rollback()
         app.logger.error(f"Erreur lors du ping : {str(e)}")
         return jsonify({'error': str(e)}), 500
 
@@ -201,15 +201,47 @@ def get_harvester_info():
     """Endpoint pour récupérer les informations d'une sonde"""
     harvester = get_harvester_from_request()
     if not harvester:
-        return jsonify({'error': 'Sonde non autorisée'}), 401
-    
+        return jsonify({'error': 'Invalid API key'}), 401
+        
     return jsonify({
-        'id': harvester.id,
-        'name': harvester.name,
-        'client_name': harvester.client_name,
         'status': harvester.status,
-        'last_seen': harvester.last_seen.isoformat() if harvester.last_seen else None
+        'force_scan': getattr(harvester, 'force_scan', False)
     })
+
+@app.route('/api/harvester/<int:harvester_id>/force-scan', methods=['POST'])
+def force_scan(harvester_id):
+    """Force un scan immédiat sur une sonde spécifique"""
+    try:
+        harvester = Harvester.query.get(harvester_id)
+        if not harvester:
+            return jsonify({'error': 'Sonde non trouvée'}), 404
+            
+        harvester.force_scan = True
+        db.session.commit()
+        
+        # Attendre que le scan soit effectué (max 30 secondes)
+        start_time = time.time()
+        while time.time() - start_time < 30:
+            # Vérifier si un nouveau scan a été reçu
+            latest_scan = NetworkScan.query.filter_by(harvester_id=harvester_id).order_by(NetworkScan.timestamp.desc()).first()
+            if latest_scan and latest_scan.timestamp > datetime.utcnow() - timedelta(seconds=30):
+                harvester.force_scan = False
+                db.session.commit()
+                return jsonify({
+                    'status': 'success',
+                    'message': 'Scan effectué avec succès',
+                    'scan_id': latest_scan.id
+                })
+            time.sleep(1)
+            
+        # Si aucun scan n'a été reçu après 30 secondes
+        harvester.force_scan = False
+        db.session.commit()
+        return jsonify({'error': 'Timeout - Aucun scan reçu'}), 408
+        
+    except Exception as e:
+        app.logger.error(f"Erreur lors du scan forcé : {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/test', methods=['GET'])
 def test_api():
@@ -348,11 +380,7 @@ def delete_harvester(harvester_id):
 @app.route('/api/submit_scan', methods=['POST'])
 def submit_scan():
     """Soumettre les résultats d'un scan"""
-    api_key = request.headers.get('X-API-Key')
-    if not api_key:
-        return jsonify({'error': 'API key required'}), 401
-
-    harvester = Harvester.query.filter_by(api_key=api_key).first()
+    harvester = get_harvester_from_request()
     if not harvester:
         return jsonify({'error': 'Invalid API key'}), 401
 
@@ -373,6 +401,7 @@ def submit_scan():
         
         # Mettre à jour les statistiques du harvester
         harvester.last_seen = datetime.utcnow()
+        harvester.force_scan = False
         db.session.commit()
 
         app.logger.info(f"Scan reçu de {harvester.name} pour le réseau {data['network']}")

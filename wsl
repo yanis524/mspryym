@@ -1,0 +1,27 @@
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root           1  0.0  0.1  21720 12776 ?        Ss   13:08   0:00 /sbin/init
+root           2  0.0  0.0   2616  1444 ?        Sl   13:08   0:00 /init
+root           6  0.1  0.0   3208  2252 ?        Sl   13:08   0:11 plan9 --control-socket 6 --log-level 4 --server-fd 7 --pipe-fd 9 --log-truncate
+root          51  0.0  0.2 132280 17412 ?        S<s  13:09   0:00 /usr/lib/systemd/systemd-journald
+root          96  0.0  0.0  24652  6836 ?        Ss   13:09   0:00 /usr/lib/systemd/systemd-udevd
+systemd+     163  0.0  0.1  21452 12016 ?        Ss   13:09   0:00 /usr/lib/systemd/systemd-resolved
+systemd+     164  0.0  0.0  91020  6532 ?        Ssl  13:09   0:00 /usr/lib/systemd/systemd-timesyncd
+root         173  0.0  0.0   4236  2608 ?        Ss   13:09   0:00 /usr/sbin/cron -f -P
+message+     174  0.0  0.0   9620  5232 ?        Ss   13:09   0:00 @dbus-daemon --system --address=systemd: --nofork --nopidfile --systemd-activation --syslog-only
+root         181  0.0  0.1  17976  8436 ?        Ss   13:09   0:00 /usr/lib/systemd/systemd-logind
+root         184  0.0  0.2 1756096 15944 ?       Ssl  13:09   0:00 /usr/libexec/wsl-pro-service -vv
+syslog       197  0.0  0.0 222508  5036 ?        Ssl  13:09   0:00 /usr/sbin/rsyslogd -n -iNONE
+root         210  0.0  0.2 107012 22624 ?        Ssl  13:09   0:00 /usr/bin/python3 /usr/share/unattended-upgrades/unattended-upgrade-shutdown --wait-for-signal
+root         297  0.0  0.0   2620   124 ?        Ss   13:09   0:00 /init
+root         298  0.0  0.0   2620   128 ?        S    13:09   0:00 /init
+yanis        299  0.0  0.0   6072  5200 pts/0    Ss   13:09   0:00 -bash
+root         300  0.0  0.0   6820  4616 pts/1    Ss   13:09   0:00 /bin/login -f
+yanis        352  0.0  0.1  20268 11408 ?        Ss   13:09   0:00 /usr/lib/systemd/systemd --user
+yanis        353  0.0  0.0  21144  1724 ?        S    13:09   0:00 (sd-pam)
+yanis        367  0.0  0.0   6072  5212 pts/1    S+   13:09   0:00 -bash
+root         384  0.0  0.0  14320  7152 pts/0    S+   13:09   0:00 sudo -s
+root         388  0.0  0.0  14320  1256 pts/2    Ss   13:09   0:00 sudo -s
+root         389  0.0  0.0   5120  4200 pts/2    S    13:09   0:00 /bin/bash
+root         461  0.0  0.0   3116  1100 tty1     Ss+  13:24   0:00 /sbin/agetty -o -p -- \u --noclear - linux
+polkitd      737  0.0  0.1 308160  9220 ?        Ssl  13:53   0:00 /usr/lib/polkit-1/polkitd --no-debug
+root        8908  0.0  0.0   8280  4188 pts/2    R+   15:33   0:00 ps aux
