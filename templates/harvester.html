@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h2>{{ harvester.name }} - Dashboard</h2>
+            <button class="btn btn-primary" onclick="startScan('{{ harvester.id }}')">
+                <span class="scan-text">Lancer un scan</span>
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card mb-3">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">Appareils connectés</h5>
+                        </div>
+                        <div class="card-body">
+                            <h3 class="text-center">{{ total_devices }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card mb-3">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="card-title mb-0">Ports ouverts détectés</h5>
+                        </div>
+                        <div class="card-body">
+                            <h3 class="text-center">{{ total_ports }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card mb-3">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="card-title mb-0">Réseaux scannés</h5>
+                        </div>
+                        <div class="card-body">
+                            <h3 class="text-center">{{ networks }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive mt-4">
+                <h4>Derniers scans</h4>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Réseau</th>
+                            <th>Appareils</th>
+                            <th>Ports</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for scan in scans %}
+                        <tr>
+                            <td>{{ scan.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td>{{ scan.network }}</td>
+                            <td>{{ scan.total_devices }}</td>
+                            <td>{{ scan.total_ports }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function startScan(harvesterId) {
+    const button = document.querySelector('.btn-primary');
+    const scanText = button.querySelector('.scan-text');
+    
+    // Désactiver le bouton et montrer le chargement
+    button.disabled = true;
+    scanText.innerHTML = 'Scan en cours...';
+    
+    fetch(`/api/harvester/${harvesterId}/scan`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            // Attendre 2 secondes puis recharger la page
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        } else {
+            alert('Erreur : ' + data.error);
+            button.disabled = false;
+            scanText.innerHTML = 'Lancer un scan';
+        }
+    })
+    .catch(error => {
+        alert('Erreur : ' + error);
+        button.disabled = false;
+        scanText.innerHTML = 'Lancer un scan';
+    });
+}
+</script>
+{% endblock %}

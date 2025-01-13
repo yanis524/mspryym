@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - {{ harvester.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- En-tête du dashboard -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1>{{ harvester.name }}</h1>
+                <span class="badge bg-{{ 'success' if harvester.status == 'connected' else 'danger' }}" id="harvester-status">
+                    {{ 'Connectée' if harvester.status == 'connected' else 'Déconnectée' }}
+                </span>
+            </div>
+            <p class="text-muted">
+                Client: {{ harvester.client_name }} |
+                Dernière activité: <span id="last-seen">{{ harvester.last_seen|format_datetime if harvester.last_seen else 'Jamais' }}</span>
+            </p>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Appareils détectés</h5>
+                    <h2 class="card-text" data-stat="total_devices">{{ stats.total_devices|default(0) }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Ports ouverts</h5>
+                    <h2 class="card-text" data-stat="open_ports">{{ stats.open_ports|default(0) }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Scans effectués</h5>
+                    <h2 class="card-text" data-stat="scan_count">{{ stats.scan_count|default(0) }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Derniers scans -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Derniers scans</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Appareils</th>
+                                    <th>Ports ouverts</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-scans">
+                                {% for scan in recent_scans %}
+                                <tr>
+                                    <td>{{ scan.timestamp|format_datetime }}</td>
+                                    <td>{{ scan.summary.total_devices if scan.summary else 0 }}</td>
+                                    <td>{{ scan.summary.open_ports if scan.summary else 0 }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if scan.status == 'completed' else 'warning' }}">
+                                            {{ scan.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('scan_details', scan_id=scan.id) }}" 
+                                           class="btn btn-sm btn-primary">
+                                            Détails
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center">Aucun scan effectué</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Met à jour les données toutes les 30 secondes
+    const harvesterId = {{ harvester.id }};
+    setInterval(() => updateDashboardStats(harvesterId), 30000);
+</script>
+{% endblock %}

@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Détails du scan - {{ scan.timestamp|format_datetime }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1>Détails du scan</h1>
+                <a href="{{ url_for('harvester_dashboard', harvester_id=scan.harvester_id) }}" class="btn btn-secondary">
+                    Retour au dashboard
+                </a>
+            </div>
+            <p class="text-muted">
+                Date: {{ scan.timestamp|format_datetime }} |
+                Statut: <span class="badge bg-{{ 'success' if scan.status == 'completed' else 'warning' }}">{{ scan.status }}</span>
+            </p>
+        </div>
+    </div>
+
+    <!-- Liste des appareils -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Appareils détectés ({{ scan.scan_data|length }})</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>IP</th>
+                                    <th>Hostname</th>
+                                    <th>Ports ouverts</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for device in scan.scan_data %}
+                                <tr>
+                                    <td>{{ device.ip }}</td>
+                                    <td>{{ device.hostname if device.hostname else 'Non résolu' }}</td>
+                                    <td>
+                                        {% if device.ports %}
+                                            <button class="btn btn-sm btn-info" type="button" 
+                                                    data-bs-toggle="collapse" 
+                                                    data-bs-target="#ports-{{ loop.index }}" 
+                                                    aria-expanded="false">
+                                                Voir les ports ({{ device.ports|length }})
+                                            </button>
+                                        {% else %}
+                                            Aucun port ouvert
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if device.hostname %}
+                                            <a href="http://{{ device.ip }}" target="_blank" class="btn btn-sm btn-primary">
+                                                Visiter
+                                            </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% if device.ports %}
+                                <tr>
+                                    <td colspan="4" class="p-0">
+                                        <div class="collapse" id="ports-{{ loop.index }}">
+                                            <div class="card card-body m-2">
+                                                <table class="table table-sm mb-0">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Port</th>
+                                                            <th>Service</th>
+                                                            <th>État</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for port in device.ports %}
+                                                        <tr>
+                                                            <td>{{ port.port }}</td>
+                                                            <td>{{ port.service }}</td>
+                                                            <td>
+                                                                <span class="badge bg-success">Ouvert</span>
+                                                            </td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center">Aucun appareil détecté</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ajouter Bootstrap JS et Popper.js pour les dropdowns -->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+{% endblock %}

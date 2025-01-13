@@ -1,0 +1,22 @@
+{
+    "server": {
+        "host": "0.0.0.0",
+        "port": 5000,
+        "debug": true,
+        "secret_key": "dev-key-change-in-production"
+    },
+    "database": {
+        "uri": "sqlite:///seahawks.db"
+    },
+    "api": {
+        "rate_limit": 100,
+        "token_expiration": 3600
+    },
+    "logging": {
+        "level": "INFO",
+        "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        "file": "logs/nester.log",
+        "max_size": 10485760,
+        "backup_count": 5
+    }
+}

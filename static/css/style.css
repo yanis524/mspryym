@@ -1,0 +1,45 @@
+/* Style personnalisé pour Seahawks Monitoring */
+
+/* Styles généraux */
+body {
+    background-color: #f8f9fa;
+}
+
+/* En-tête */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+}
+
+/* Cartes */
+.card {
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,.1);
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0,0,0,.125);
+}
+
+/* Badges */
+.badge {
+    font-size: 0.9em;
+    padding: 0.5em 1em;
+}
+
+/* Tableaux */
+.table th {
+    background-color: #f8f9fa;
+}
+
+.table-hover tbody tr:hover {
+    background-color: #f5f5f5;
+}
+
+/* Footer */
+.footer {
+    background-color: #343a40;
+    color: white;
+    padding: 1rem 0;
+    margin-top: 2rem;
+}
